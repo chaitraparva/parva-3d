@@ -1,0 +1,28 @@
+{
+  "name": "parva-residence",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "images": "node scripts/fetch-images.mjs",
+    "setup": "npm install && node scripts/fetch-images.mjs",
+    "dev": "vite --open",
+    "build": "vite build",
+    "preview": "vite preview --open"
+  },
+  "dependencies": {
+    "@fontsource/bodoni-moda": "^5.3.0",
+    "@fontsource/instrument-serif": "^5.1.0",
+    "@fontsource/inter": "^5.1.0",
+    "@gsap/react": "^2.1.1",
+    "gsap": "^3.12.5",
+    "lenis": "^1.1.13",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.8"
+  }
+}
