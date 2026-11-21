@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "../lib/smooth.js";
 import { Chars } from "../components/Split.jsx";
-import { VIDEOS } from "../data/images.js";
+import { VIDEOS, heroSrc } from "../data/images.js";
 
 // 01 — The drone film plays INSIDE a giant PARVA wordmark cut out of the dark.
 // Scroll flies the camera through the letters until the footage fills the screen,
@@ -17,7 +17,7 @@ export default function Hero({ ready }) {
       defaults: { ease: "none" },
     });
     tl.to(".hero .ko-word", { scale: 14, duration: 0.45, ease: "power2.in" }, 0)
-      .to(".hero .knockout", { opacity: 0, duration: 0.12 }, 0.33)
+      .to(".hero .knockout", { autoAlpha: 0, duration: 0.12 }, 0.33)
       .to(".hero .ko-side", { opacity: 0, y: -20, duration: 0.1 }, 0)
       .to(".hero .cue", { opacity: 0, duration: 0.05 }, 0)
       .fromTo(".hero .film", { scale: 1.35 }, { scale: 1, duration: 0.6 }, 0)
@@ -43,8 +43,8 @@ export default function Hero({ ready }) {
         <video
           ref={vid}
           className="film-video"
-          src={VIDEOS.hero.src}
-          poster={VIDEOS.hero.poster}
+          src={heroSrc()}
+          poster={VIDEOS.hero.poster.replace("w=2560", typeof window !== "undefined" && innerWidth < 900 ? "w=1280" : "w=2560")}
           muted playsInline loop autoPlay preload="auto"
           onCanPlay={(e) => e.currentTarget.classList.add("ready")}
         />

@@ -62,7 +62,8 @@ export default function Explore() {
 
       <div className="intro">
         <h2><Words text={"Find your\n*floor.*"} /></h2>
-        <p>Hover the building · click a floor to step inside</p>
+        <p className="hint-d">Hover the building · click a floor to step inside</p>
+        <p className="hint-m">Tap any floor to step inside</p>
         <div className="hover-info">
           {hoverFloor ? (
             <>

@@ -56,6 +56,23 @@ export const IMAGES = {
 };
 
 // Direct image links (Unsplash's /download links are now behind a bot check, so they can't be hot-linked).
+// Keys that have files in /public/img (with -800 / -1600 / -2400 / -64 copies made by `npm run images`).
+export const LOCAL = new Set(["aerial","atrium","balcony","bath","bedroom","bedroom2","clouds","coast","courtyard","courtyard2","entrance","gym","gym2","kitchen","kitchen2","kitchen3","kitchen4","lift","living","lobby","lobby2","play","play2","pool","pool2","roofs","sauna","skyline","terrace","tower","tower2","tower3"]);
+
+// Responsive candidates for an image key: phones get ~800–1600px, desktops 2400px, 4K screens 3840px.
+export function sources(key) {
+  if (LOCAL.has(key)) return {
+    src: `/img/${key}-1600.jpg`,
+    srcSet: `/img/${key}-800.jpg 800w, /img/${key}-1600.jpg 1600w, /img/${key}-2400.jpg 2400w, /img/${key}.jpg 3840w`,
+  };
+  const u = IMAGES[key]?.url;
+  if (u && u.includes("images.unsplash.com")) {
+    const at = (w) => u.replace(/w=\d+/, `w=${w}`).replace(/q=\d+/, w > 2000 ? "q=80" : "q=75");
+    return { src: at(1600), srcSet: [800, 1600, 2400, 3840].map((w) => `${at(w)} ${w}w`).join(", ") };
+  }
+  return { src: remoteUrl(key), srcSet: null };
+}
+
 export const remoteUrl = (key, w = 2400) =>
   IMAGES[key].url || `https://unsplash.com/photos/${IMAGES[key].id}/download?w=${w}`;
 
@@ -65,7 +82,19 @@ export const remoteUrl = (key, w = 2400) =>
 // To use your own film, drop public/video/hero.mp4 in and change src to "/video/hero.mp4".
 export const VIDEOS = {
   hero: {
+    // picked by screen size in heroSrc(): phones 720p, laptops 1080p, big/4K screens 1440p
     src: "https://videos.pexels.com/video-files/19444055/19444055-uhd_2560_1440_60fps.mp4",
+    hd: "https://videos.pexels.com/video-files/19444055/19444055-hd_1920_1080_60fps.mp4",
+    mobile: "https://videos.pexels.com/video-files/19444055/19444055-hd_1280_720_60fps.mp4",
     poster: "https://images.pexels.com/videos/19444055/pexels-photo-19444055.jpeg?auto=compress&w=2560",
   },
 };
+
+export function heroSrc() {
+  const v = VIDEOS.hero;
+  if (typeof window === "undefined") return v.src;
+  const px = Math.max(screen.width, screen.height) * Math.min(devicePixelRatio || 1, 2);
+  const conn = navigator.connection;
+  if (innerWidth < 900 || conn?.saveData || /2g|3g/.test(conn?.effectiveType || "")) return v.mobile;
+  return px > 3000 ? v.src : v.hd;
+}
