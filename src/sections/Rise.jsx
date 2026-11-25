@@ -5,11 +5,14 @@ import { gsap } from "../lib/smooth.js";
 import { Chars } from "../components/Split.jsx";
 import Img from "../components/Img.jsx";
 import { FloorView, UnitModal } from "./Explore.jsx";
-import { FLOORS, PLATES, TYPE_COLORS, LAST_FLOOR } from "../data/content.js";
+import { FLOORS, PLATES, TYPE_COLORS, LAST_FLOOR, FIRST_FLOOR, TOWER_GEO } from "../data/content.js";
+import ScrollFilm from "../components/ScrollFilm.jsx";
+import { VIDEOS, heroSrc } from "../data/images.js";
 
 // 01 — The Rise. One continuous, scroll-driven 3D shot:
 // clouds → Dubai from above → the tower is built floor by floor → rooftop → dusk → pick a floor.
 const SCENE_END = 0.9;     // last 10% of the scroll holds the explorer still
+const RISE_WIN = [0.3, 0.7]; // where the construction happens in the film (fraction of the film)
 
 const STAGES = [
   [0.0, "Groundwork", "The plot is cleared and the foundations go in."],
@@ -20,58 +23,51 @@ const STAGES = [
 
 export default function Rise({ ready }) {
   const root = useRef(null);
-  const canvas = useRef(null);
-  const world = useRef(null);
+  const film = useRef(null);
+  const vid = useRef(null);
+  const bandsRef = useRef(null);
   const target = useRef(0);
   const hud = useRef({});
-  const [failed, setFailed] = useState(false);
+  const [manifest, setManifest] = useState(undefined);   // undefined = loading, null = no film yet
   const [hover, setHover] = useState(null);
   const [floorN, setFloorN] = useState(null);
   const [unit, setUnit] = useState(null);
   const [exploring, setExploring] = useState(false);
 
-  // ---- WebGL world + render loop (runs only while the section is on screen) ----
+  // the film: /film/manifest.json written by scripts/make-film.sh
   useEffect(() => {
-    let w, raf = 0, alive = true, inView = true, cur = 0, last = performance.now();
-    const mobile = matchMedia("(max-width: 900px), (hover: none)").matches;
-    const boot = async () => {
-      try {
-        const { createWorld } = await import("../components/rise/world.js");
-        if (!alive) return;
-        w = createWorld(canvas.current, { mobile });
-        world.current = w;
-        const size = () => { const r = canvas.current.getBoundingClientRect(); w.resize(r.width, r.height); w.setMobileFrame(innerWidth < 900); };
-        size(); addEventListener("resize", size);
-        w.compile();
-        const loop = (t) => {
-          raf = requestAnimationFrame(loop);
-          if (!inView) return;
-          const dt = Math.min(0.05, (t - last) / 1000); last = t;
-          cur += (target.current - cur) * (1 - Math.exp(-dt * 7));
-          if (window.__riseSnap) cur = target.current;
-          if (Math.abs(target.current - cur) < 0.00005) cur = target.current;
-          w.setProgress(cur);
-          w.render(t);
-          drawHud(cur);
-        };
-        raf = requestAnimationFrame(loop);
-        const io = new IntersectionObserver(([e]) => { inView = e.isIntersecting; }, { rootMargin: "100px" });
-        io.observe(root.current);
-        w._cleanup = () => { io.disconnect(); removeEventListener("resize", size); };
-      } catch (e) {
-        console.warn("3D unavailable, falling back to image", e);
-        setFailed(true);
+    fetch("/film/manifest.json").then((r) => (r.ok ? r.json() : null)).catch(() => null)
+      .then((m) => setManifest(m && m.count ? { base: "/film", ...m } : null));
+  }, []);
+
+  // drive film / hud / floor bands from scroll
+  useEffect(() => {
+    let raf;
+    const loop = () => {
+      raf = requestAnimationFrame(loop);
+      const p = target.current;
+      film.current?.setProgress(p);
+      drawHud(p);
+      // keep the floor bands glued to the tower in the final frame
+      const g = manifest?.tower, r = film.current?.frameRect?.(), b = bandsRef.current;
+      if (g && r && b) {
+        const k = r.w / r.iw;
+        b.style.transform = `translate(${r.x}px, ${r.y}px)`;
+        b.style.width = `${r.iw * k}px`; b.style.height = `${r.ih * k}px`;
       }
     };
-    boot();
-    return () => { alive = false; cancelAnimationFrame(raf); w?._cleanup?.(); w?.dispose(); };
-  }, []);
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [manifest]);
+
+  useEffect(() => { if (ready && manifest === null) vid.current?.play?.().catch(() => {}); }, [ready, manifest]);
 
   // level counter + stage captions, written straight to the DOM each frame
   const drawHud = (p) => {
     const h = hud.current;
     if (!h.num) return;
-    const b = Math.min(1, Math.max(0, (p - 0.26) / (0.68 - 0.26)));
+    const [a0, a1] = RISE_WIN;
+    const b = Math.min(1, Math.max(0, (p - a0) / (a1 - a0)));
     const lvl = Math.min(15, Math.floor(b * 19));
     const txt = lvl >= 15 ? "RF" : String(lvl).padStart(2, "0");
     if (h.num.textContent !== txt) h.num.textContent = txt;
@@ -133,27 +129,26 @@ export default function Rise({ ready }) {
       .from(".rise .gl", { opacity: 0, duration: 2.4, ease: "power2.out" }, 0);
   }, { scope: root, dependencies: [ready] });
 
-  // ---- explorer: hover / tap floors on the 3D tower ----
-  const level = (e) => {
-    const r = canvas.current.getBoundingClientRect();
-    const k = world.current?.pick(e.clientX - r.left, e.clientY - r.top);
-    return k >= 1 && k <= LAST_FLOOR ? k : null;
-  };
-  const onMove = (e) => {
-    if (!exploring || e.pointerType === "touch") return;
-    const k = level(e);
-    if (k !== hover) { setHover(k); world.current?.setHover(k); }
-  };
-  const onClick = (e) => { if (!exploring) return; const k = level(e); if (k) { setHover(null); world.current?.setHover(null); setFloorN(k); } };
-  const railHover = (k) => { setHover(k); world.current?.setHover(k); };
-
+  // ---- explorer ----
+  const railHover = (k) => setHover(k);
   const floor = floorN ? FLOORS.find((f) => f.n === floorN) : null;
   const hf = hover ? FLOORS.find((f) => f.n === hover) : null;
 
   return (
-    <section className={`rise pin ${exploring ? "is-exploring" : ""} ${hover ? "is-hover" : ""}`} id="top" ref={root} data-chapter="01|The rise">
-      {failed ? <div className="fill media"><Img k="residence" eager /></div> : (
-        <canvas ref={canvas} className="gl" onPointerMove={onMove} onClick={onClick} onPointerLeave={() => { setHover(null); world.current?.setHover(null); }} />
+    <section className={`rise pin ${exploring ? "is-exploring" : ""} ${hover ? "is-hover" : ""} ${manifest === null ? "no-film" : ""}`} id="top" ref={root} data-chapter="01|The rise">
+      {manifest ? (
+        <ScrollFilm ref={film} manifest={manifest} className="gl" />
+      ) : (
+        <>
+          {/* until the AI film is dropped in: real drone footage, then the finished tower */}
+          <video ref={vid} className="gl bgvid" src={heroSrc()} poster={VIDEOS.hero.poster} muted playsInline loop autoPlay preload="auto" />
+          <div className="tower-photo"><Img k="residence" eager /><TowerBands geo={TOWER_GEO} hover={hover} setHover={setHover} enter={setFloorN} /></div>
+        </>
+      )}
+      {manifest?.tower && (
+        <svg ref={bandsRef} className="film-bands" viewBox={`0 0 ${manifest.tower.iw} ${manifest.tower.ih}`} preserveAspectRatio="none">
+          <Bands geo={manifest.tower} hover={hover} setHover={setHover} enter={setFloorN} />
+        </svg>
       )}
       <div className="fill vignette" />
       <div className="fill leftshade" />
@@ -217,4 +212,19 @@ export default function Rise({ ready }) {
       {createPortal(<UnitModal unit={unit} floor={floor} onClose={() => setUnit(null)} />, document.body)}
     </section>
   );
+}
+
+// floor bands over the tower (geometry in image pixels: left/right/top/bottom of the residential floors, roofTop)
+function Bands({ geo, hover, setHover, enter }) {
+  const { left, right, top, bottom, roofTop } = geo;
+  const count = LAST_FLOOR - FIRST_FLOOR + 1, resi = count - 1, fh = (bottom - top) / resi;
+  const band = (n) => (n === LAST_FLOOR ? { y: roofTop, h: top - roofTop } : { y: bottom - (n - FIRST_FLOOR + 1) * fh, h: fh });
+  return FLOORS.map((f) => (
+    <rect key={f.n} className={`band ${hover === f.n ? "on" : ""}`} x={left - 8} y={band(f.n).y} width={right - left + 16} height={band(f.n).h}
+      fill={TYPE_COLORS[PLATES[f.plate].units[0][1]]}
+      onMouseEnter={() => setHover(f.n)} onMouseLeave={() => setHover(null)} onClick={() => enter(f.n)} />
+  ));
+}
+function TowerBands({ geo, ...rest }) {
+  return <svg className="bands" viewBox={`0 0 ${geo.w} ${geo.h}`} preserveAspectRatio="none"><Bands geo={geo} {...rest} /></svg>;
 }

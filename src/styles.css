@@ -863,3 +863,21 @@ html, body { overflow-x: clip; }
   .day .panel.outro { width: 80vw; }
   .chapter { left: 1.2rem; bottom: 1rem; }
 }
+
+/* rise — film mode */
+.rise .gl { object-fit: cover; }
+.rise .film-bands { position: absolute; left: 0; top: 0; z-index: 2; transform-origin: 0 0; pointer-events: none; opacity: 0; transition: opacity .6s; }
+.rise.is-exploring .film-bands { pointer-events: auto; opacity: 1; }
+.rise .band { opacity: 0; cursor: pointer; transition: opacity .3s; mix-blend-mode: screen; }
+.rise .band.on { opacity: .55; }
+/* interim (no film yet): drone footage, then the tower photo for the explorer */
+.rise.no-film .c-build { display: none; }
+.rise .tower-photo { position: absolute; z-index: 2; height: 92vh; aspect-ratio: 2 / 3; left: 56%; top: 4vh; opacity: 0; pointer-events: none; transition: opacity 1s, transform 1.2s cubic-bezier(.2,.7,.2,1); transform: translateY(4vh) scale(.97); border-radius: .4rem; overflow: hidden; box-shadow: 0 3rem 7rem rgba(0,0,0,.5); }
+.rise.is-exploring .tower-photo { opacity: 1; pointer-events: auto; transform: none; }
+.rise .tower-photo .img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.rise .tower-photo .bands { position: absolute; inset: 0; width: 100%; height: 100%; }
+.rise.is-exploring .bgvid { filter: brightness(.45) saturate(.9); transition: filter 1s; }
+@media (max-width: 900px) {
+  .rise .tower-photo { height: 54svh; left: 50%; top: auto; bottom: calc(4.6rem + var(--bar, 0px)); transform: translateX(-50%) translateY(4vh); }
+  .rise.is-exploring .tower-photo { transform: translateX(-50%); }
+}
