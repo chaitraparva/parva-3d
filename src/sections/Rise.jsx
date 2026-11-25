@@ -12,7 +12,7 @@ import { VIDEOS, heroSrc } from "../data/images.js";
 // 01 — The Rise. One continuous, scroll-driven 3D shot:
 // clouds → Dubai from above → the tower is built floor by floor → rooftop → dusk → pick a floor.
 const SCENE_END = 0.9;     // last 10% of the scroll holds the explorer still
-const RISE_WIN = [0.3, 0.7]; // where the construction happens in the film (fraction of the film)
+const RISE_WIN = [0.35, 0.66]; // where the construction happens in the film (fraction of the film)
 
 const STAGES = [
   [0.0, "Groundwork", "The plot is cleared and the foundations go in."],
@@ -96,19 +96,19 @@ export default function Rise({ ready }) {
     tl.to(".rise .c-hero", { autoAlpha: 0, y: -60, duration: at(0.05) }, at(0.03))
       .to(".rise .cue", { autoAlpha: 0, duration: at(0.02) }, at(0.01))
       // Dubai, from above
-      .fromTo(".rise .c-from .c", { yPercent: 110 }, { yPercent: 0, stagger: 0.002, duration: at(0.04), ease: "power3.out" }, at(0.15))
-      .fromTo(".rise .c-from p, .rise .c-from .eyebrow", { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: at(0.03) }, at(0.17))
-      .to(".rise .c-from", { autoAlpha: 0, y: -40, duration: at(0.03) }, at(0.22))
+      .fromTo(".rise .c-from .c", { yPercent: 110 }, { yPercent: 0, stagger: 0.002, duration: at(0.04), ease: "power3.out" }, at(0.13))
+      .fromTo(".rise .c-from p, .rise .c-from .eyebrow", { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: at(0.03) }, at(0.15))
+      .to(".rise .c-from", { autoAlpha: 0, y: -40, duration: at(0.03) }, at(0.23))
       // Ready to rise
-      .fromTo(".rise .c-ready .c", { yPercent: 110, opacity: 0 }, { yPercent: 0, opacity: 1, stagger: 0.003, duration: at(0.04), ease: "power3.out" }, at(0.24))
-      .to(".rise .c-ready", { autoAlpha: 0, scale: 1.08, duration: at(0.03) }, at(0.3))
+      .fromTo(".rise .c-ready .c", { yPercent: 110, opacity: 0 }, { yPercent: 0, opacity: 1, stagger: 0.003, duration: at(0.04), ease: "power3.out" }, at(0.26))
+      .to(".rise .c-ready", { autoAlpha: 0, scale: 1.08, duration: at(0.03) }, at(0.33))
       // construction HUD
-      .fromTo(".rise .c-build", { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: at(0.03) }, at(0.31))
-      .to(".rise .c-build", { autoAlpha: 0, duration: at(0.03) }, at(0.68))
+      .fromTo(".rise .c-build", { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: at(0.03) }, at(0.35))
+      .to(".rise .c-build", { autoAlpha: 0, duration: at(0.03) }, at(0.655))
       // rooftop
-      .fromTo(".rise .c-roof .c", { yPercent: 110 }, { yPercent: 0, stagger: 0.002, duration: at(0.04), ease: "power3.out" }, at(0.64))
-      .fromTo(".rise .c-roof p", { autoAlpha: 0 }, { autoAlpha: 1, duration: at(0.03) }, at(0.67))
-      .to(".rise .c-roof", { autoAlpha: 0, duration: at(0.03) }, at(0.75))
+      .fromTo(".rise .c-roof .c", { yPercent: 110 }, { yPercent: 0, stagger: 0.002, duration: at(0.04), ease: "power3.out" }, at(0.68))
+      .fromTo(".rise .c-roof p", { autoAlpha: 0 }, { autoAlpha: 1, duration: at(0.03) }, at(0.7))
+      .to(".rise .c-roof", { autoAlpha: 0, duration: at(0.03) }, at(0.76))
       // dusk + numbers
       .fromTo(".rise .c-dusk .c", { yPercent: 110 }, { yPercent: 0, stagger: 0.002, duration: at(0.04), ease: "power3.out" }, at(0.77))
       .fromTo(".rise .c-dusk .stats > div", { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, stagger: at(0.008), duration: at(0.03) }, at(0.79))
