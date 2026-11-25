@@ -113,18 +113,18 @@ export const PLANS = {
 };
 
 export const AMENITIES = [
-  { name: "Infinity pool", img: "auresta" },
-  { name: "Rooftop sky lounge", img: "roofgarden" },
-  { name: "Adults' swimming pool", img: "pool" },
-  { name: "Residents' gym", img: "gym" },
-  { name: "Wellness studio", img: "gym2" },
-  { name: "Sauna & steam", img: "sauna" },
-  { name: "Landscaped courtyard", img: "courtyard" },
-  { name: "Kids' play garden", img: "courtyard2" },
-  { name: "Open-air lounge", img: "balcony" },
-  { name: "Barbecue terrace", img: "terrace" },
-  { name: "Reading garden", img: "atrium" },
-  { name: "Residents' lobby lounge", img: "arrive2" },
+  { name: "Infinity pool", note: "Edge-to-sky water on the podium deck.", img: "auresta" },
+  { name: "Rooftop sky lounge", note: "Fourteen floors up, with the whole city as the view.", img: "roofgarden" },
+  { name: "Adults' swimming pool", note: "A quiet lap pool, kept for lengths, not splashing.", img: "pool" },
+  { name: "Residents' gym", note: "Open from first light, with garden views.", img: "gym" },
+  { name: "Wellness studio", note: "Yoga, pilates and stretch, morning and evening.", img: "gym2" },
+  { name: "Sauna & steam", note: "Cedar, stone and heat for the hour the city slows.", img: "sauna" },
+  { name: "Landscaped courtyard", note: "Shade trees, water and somewhere to read.", img: "courtyard" },
+  { name: "Kids' play garden", note: "Shaded play and a splash pad, in sight of the lounge.", img: "courtyard2" },
+  { name: "Open-air lounge", note: "Sofas under the sky for long evenings.", img: "balcony" },
+  { name: "Barbecue terrace", note: "A grill, a long table, and room for everyone.", img: "terrace" },
+  { name: "Reading garden", note: "A quiet corner for the first coffee of the day.", img: "atrium" },
+  { name: "Residents' lobby lounge", note: "Coffee on the house, every morning.", img: "arrive2" },
 ];
 
 export const REACH = [
@@ -133,4 +133,14 @@ export const REACH = [
   ["03", "Waterfront promenade", "6 min"],
   ["04", "Business district", "8 min"],
   ["05", "International airport", "22 min"],
+];
+
+// A day at Parva — the horizontal chapter
+export const DAY = [
+  { time: "07:00", part: "Morning", title: "Coffee on the courtyard", text: "The city is still waking up below and the courtyard is already in shade.", img: "courtyard" },
+  { time: "09:30", part: "Morning", title: "Strength, with a view", text: "A residents' gym with garden views, open from first light.", img: "gym" },
+  { time: "13:00", part: "Midday", title: "Lengths before lunch", text: "An adults' lap pool on the podium, quiet all afternoon.", img: "pool2" },
+  { time: "16:30", part: "Afternoon", title: "Steam, stone, stillness", text: "Sauna and steam for the hour the city slows down.", img: "sauna" },
+  { time: "19:00", part: "Evening", title: "A table that seats twelve", text: "The barbecue terrace, a long table and everyone you like.", img: "terrace" },
+  { time: "22:30", part: "Night", title: "The long soak", text: "Spa bathrooms as standard: freestanding tubs and rain showers.", img: "bath" },
 ];

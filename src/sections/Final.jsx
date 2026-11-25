@@ -37,7 +37,7 @@ export function ComingHome() {
 // 13 — Kitchen: "Italian. Intuitive. Open."
 export function Kitchen() {
   return (
-    <section className="kit light">
+    <section className="kit light" data-chapter="03|Interiors">
       <div className="sticky">
         <div className="media" style={{ aspectRatio: ".9" }} data-clip><Img k="kitchen3" className="par-img" /></div>
         <p className="small muted" style={{ marginTop: "1rem" }}>The kitchen — where every party ends up.</p>
@@ -55,15 +55,15 @@ export function Kitchen() {
 export function Reach() {
   return (
     <>
-      <section className="band">
+      <section className="band" data-chapter="07|Location">
         <div className="serif">Close to everything.<br /><span className="it">Removed from the noise.</span></div>
         <div data-fade><b>3 min</b><span>Metro station</span></div>
         <div data-fade><b>5 min</b><span>Schools</span></div>
         <div data-fade><b>6 min</b><span>Waterfront</span></div>
         <div data-fade><b>22 min</b><span>Airport</span></div>
       </section>
-      <section className="reach light" id="location">
-        <div className="eyebrow" style={{ color: "#8a8378" }}>05 — Location</div>
+      <section className="reach light" id="location" data-chapter="07|Location">
+        <div className="eyebrow" style={{ color: "#8a8378" }}>07 — Location</div>
         <h2 style={{ marginTop: "1.4rem" }} data-reveal><Words text={"The city,\n*on* *your* *terms.*"} /></h2>
         <ol>{REACH.map(([n, name, t]) => <li key={n} data-fade><span>{n}</span><b>{name}</b><em>{t}</em></li>)}</ol>
       </section>
@@ -107,7 +107,7 @@ export function Tour() {
   };
 
   return (
-    <section className="tour" ref={root}>
+    <section className="tour" ref={root} data-chapter="03|Interiors">
       <div className="player" onClick={toggle} data-cursor={playing ? "Pause" : "Play"}>
         <div className="media"><Img k="living" /></div>
         <div className="planwrap"><FloorPlan plan={PLANS["2bhk"]} /></div>
@@ -145,7 +145,7 @@ export function Finale() {
       .to(".finale .endcard", { opacity: 1, duration: 0.15 }, 0.82);
   }, { scope: root });
   return (
-    <section className="finale pin" ref={root}>
+    <section className="finale pin" ref={root} data-chapter="08|Enquire">
       <div className="word">Parva</div>
       <div className="window"><div className="media"><Img k="residence" /></div></div>
       <div className="tagline">Celebrate <span className="it">the everyday.</span></div>
@@ -161,10 +161,10 @@ export function Finale() {
 export function Contact() {
   const [note, setNote] = useState("");
   return (
-    <section className="contact" id="contact">
+    <section className="contact" id="contact" data-chapter="08|Enquire">
       <div className="top">
         <div>
-          <div className="eyebrow" style={{ opacity: 0.6 }}>06 — Enquire</div>
+          <div className="eyebrow" style={{ opacity: 0.6 }}>08 — Enquire</div>
           <h2 style={{ marginTop: "1.4rem" }} data-reveal><Words text={"Let's find\n*your* *floor.*"} /></h2>
           <p className="small muted" style={{ marginTop: "2rem", maxWidth: "26rem" }}>Private viewings at our sales gallery, or the brochure and price list in your inbox within the hour.</p>
           <p className="small" style={{ marginTop: "2rem" }}>{BRAND.phone}<br />{BRAND.email}</p>

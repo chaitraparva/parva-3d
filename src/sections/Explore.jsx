@@ -92,7 +92,7 @@ export default function Explore() {
 }
 
 // Full-screen floor view: whole plate with every home + its rooms. Up/down through all floors.
-function FloorView({ floor, setFloorN, onPick, unit }) {
+export function FloorView({ floor, setFloorN, onPick, unit }) {
   const el = useRef(null);
   const [hover, setHover] = useState(null);
   const shown = useRef(false);
@@ -158,7 +158,7 @@ function FloorView({ floor, setFloorN, onPick, unit }) {
   );
 }
 
-function UnitModal({ unit, floor, onClose }) {
+export function UnitModal({ unit, floor, onClose }) {
   const el = useRef(null);
   const [is3d, set3d] = useState(true);
   const plan = unit ? PLANS[unit.plan] : null;

@@ -151,7 +151,7 @@ export function Above() {
     gsap.from(".above .note", { opacity: 0, y: 30, duration: 1.2, scrollTrigger: { trigger: root.current, start: "top 35%" } });
   }, { scope: root });
   return (
-    <section className="above pin" ref={root}>
+    <section className="above pin" ref={root} data-chapter="04|Amenities">
       <div className="fill media"><Img k="roofpool" /></div>
       <div className="fill" style={{ background: "linear-gradient(0deg, rgba(0,0,0,.45), rgba(0,0,0,0) 55%)" }} />
       <h2><Words text={"Dinner above\n*the* *skyline.*"} /></h2>
@@ -163,9 +163,9 @@ export function Above() {
 // 11 — "For every generation."
 export function Generation() {
   return (
-    <section className="gen light">
+    <section className="gen light" data-chapter="06|Community">
       <div style={{ gridColumn: "1 / 8" }}>
-        <div className="eyebrow" style={{ color: "#8a8378" }}>03 — Community</div>
+        <div className="eyebrow" style={{ color: "#8a8378" }}>06 — Community</div>
         <h2 style={{ marginTop: "1.4rem" }} data-reveal><Words text={"Room to grow up.\n*Room* *to* *grow* *old.*"} /></h2>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: "2rem", marginTop: "4rem", alignItems: "end" }}>
           <div className="media par" data-speed="0.1" style={{ aspectRatio: ".62" }} data-clip><Img k="courtyard2" className="par-img" /></div>

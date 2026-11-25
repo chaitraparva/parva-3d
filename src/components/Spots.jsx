@@ -19,7 +19,7 @@ export default function Spots({ aspect, spots, className = "" }) {
   const ox = (w - sw) / 2, oy = (h - sh) / 2;
   const items = spots.map((s) => {
     const px = ox + s.x * sw, py = oy + s.y * sh;
-    const off = !box || px < w * 0.06 || px > w * 0.94 || py < h * 0.12 || py > h * 0.9;
+    const off = !box || px < w * 0.06 || px > w * 0.94 || py < h * (w < 700 ? 0.3 : 0.12) || py > h * 0.9;
     return { ...s, px, py, off, flip: px > w * 0.58 };
   });
   return (

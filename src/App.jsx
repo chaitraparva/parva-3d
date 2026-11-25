@@ -2,14 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, startSmoothScroll } from "./lib/smooth.js";
 import Loader from "./components/Loader.jsx";
-import { Nav, Progress, Cursor, Grain, Marquee, useFontsRefresh } from "./components/Chrome.jsx";
-import Hero from "./sections/Hero.jsx";
-import Why from "./sections/Why.jsx";
-import Explore from "./sections/Explore.jsx";
+import { Nav, Progress, Cursor, Grain, Marquee, Chapter, useFontsRefresh } from "./components/Chrome.jsx";
+import Rise from "./sections/Rise.jsx";
 import Arrival from "./sections/Arrival.jsx";
 import StepInside from "./sections/StepInside.jsx";
-import { Ways, Editorial, Feel, Rush, Above, Generation } from "./sections/Lifestyle.jsx";
-import { ComingHome, Kitchen, Reach, Tour, Finale, Contact } from "./sections/Final.jsx";
+import { Above, Generation } from "./sections/Lifestyle.jsx";
+import { Amenities, Day } from "./sections/Story.jsx";
+import { Kitchen, Reach, Tour, Finale, Contact } from "./sections/Final.jsx";
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -53,24 +52,20 @@ export default function App() {
       <Grain />
       <Nav />
       <Progress />
+      <Chapter />
       <main ref={main}>
-        <Hero ready={ready} />
-        <Why />
-        <Explore />
+        <Rise ready={ready} />
         <Arrival />
         <Marquee words={["Considered", "Crafted", "Celebrated", "Fourteen floors", "One rooftop", "Dubai"]} tone="light" />
         <StepInside />
-        <Ways />
-        <Editorial />
-        <Feel />
-        <Rush />
+        <Kitchen />
+        <Tour />
+        <Amenities />
         <Above />
+        <Day />
         <Generation />
         <Marquee words={["Live in celebration", "Parva Residences", "Private viewings now open"]} tone="gold" />
-        <ComingHome />
-        <Kitchen />
         <Reach />
-        <Tour />
         <Finale />
         <Contact />
       </main>

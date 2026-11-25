@@ -43,6 +43,7 @@ export default function Arrival() {
       .fromTo(".arrival .card .img", { scale: 1.4 }, { scale: 1.05, duration: 0.3 }, 0.42)
       .fromTo(".arrival .cap > *", { opacity: 0, y: 20 }, { opacity: 1, y: 0, stagger: 0.02, duration: 0.07 }, 0.52)
       // 3 · the residents' lounge opens out
+      .set(".arrival .a3", { autoAlpha: 1 }, 0.639)
       .fromTo(".arrival .a3", { clipPath: "inset(42% 44% 42% 44% round 40vh)" }, { clipPath: "inset(0% 0% 0% 0% round 0vh)", duration: 0.22, ease: "power2.inOut" }, 0.64)
       .fromTo(".arrival .a3 .zoom", { scale: 1.6 }, { scale: 1, duration: 0.26 }, 0.64)
       .to(".arrival .l1, .arrival .card, .arrival .cap, .arrival .chap", { autoAlpha: 0, duration: 0.06 }, 0.66)
@@ -53,13 +54,13 @@ export default function Arrival() {
   }, { scope: root });
 
   return (
-    <section className="arrival pin" ref={root}>
+    <section className="arrival pin" ref={root} data-chapter="02|Arrival">
       <div className="fill media a1">
         <div className="zoom fill"><Img k="arrive1" /><Spots aspect={4 / 3} spots={LOBBY} /></div>
         <div className="fill veil" />
       </div>
 
-      <div className="chap"><span>04</span><span>The arrival</span><span>Ground floor</span></div>
+      <div className="chap"><span>02</span><span>The arrival</span><span>Ground floor</span></div>
       <div className="line l1"><Chars text={"Arrive like"} /><br /><span className="it"><Chars text={"a guest."} /></span></div>
       <figure className="card media"><Img k="arrive2" sizes="(max-width: 900px) 60vw, 30vw" /></figure>
       <div className="cap">

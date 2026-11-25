@@ -7,6 +7,7 @@ const LINKS = [
   ["#residences", "Residences", "Fourteen floors, one rooftop", "residence"],
   ["#interiors", "Interiors", "Stone, oak and evening light", "living"],
   ["#amenities", "Amenities", "A dozen reasons to stay in", "pool"],
+  ["#life", "A day at Parva", "Morning coffee to the last light", "terrace"],
   ["#location", "Location", "The city, on your terms", "aerial"],
   ["#contact", "Enquire", "Private viewings by appointment", "arrive1"],
 ];
@@ -143,4 +144,24 @@ export function Marquee({ words, tone = "dark" }) {
 // Re-measure ScrollTrigger once fonts are in (layout changes).
 export function useFontsRefresh() {
   useEffect(() => { document.fonts?.ready.then(() => ScrollTrigger.refresh()); }, []);
+}
+
+// Chapter marker — bottom-left: which part of the story you're in.
+export function Chapter() {
+  const [ch, setCh] = useState(null);
+  useEffect(() => {
+    let sts = [];
+    const t = setTimeout(() => {
+      sts = [...document.querySelectorAll("[data-chapter]")].map((el) => ScrollTrigger.create({
+        trigger: el.closest(".pin-spacer") || el, start: "top 55%", end: "bottom 55%",
+        onToggle: (s) => s.isActive && setCh(el.dataset.chapter.split("|")),
+      }));
+    }, 600);
+    return () => { clearTimeout(t); sts.forEach((s) => s.kill()); };
+  }, []);
+  return (
+    <div className={`chapter ${ch ? "" : "off"}`} aria-hidden="true">
+      <b>{ch?.[0]}</b><i /><span className="nm"><span key={ch?.[1]}>{ch?.[1]}</span></span>
+    </div>
+  );
 }

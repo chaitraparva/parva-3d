@@ -18,6 +18,8 @@ export function startSmoothScroll() {
 }
 
 export function scrollToTarget(target, opts = {}) {
+  // the residences explorer lives at the end of the pinned 3D opening
+  if (target === "#residences" && window.__riseExplore) target = window.__riseExplore();
   if (lenis) lenis.scrollTo(target, { duration: 1.8, ...opts });
   else {
     const el = typeof target === "string" ? document.querySelector(target) : target;

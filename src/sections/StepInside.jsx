@@ -55,9 +55,9 @@ export default function StepInside() {
   };
 
   return (
-    <section className="step pin light" id="interiors" ref={root}>
+    <section className="step pin light" id="interiors" ref={root} data-chapter="03|Interiors">
       <div className="head">
-        <div className="eyebrow" style={{ color: "#8a8378" }}>The residences</div>
+        <div className="eyebrow" style={{ color: "#8a8378" }}>03 — Interiors</div>
         <h2 style={{ marginTop: "1.2rem" }}><Words text={"Inside, the light\n*does* *the* *talking.*"} /></h2>
         <p>Engineered oak, honed stone and glass from floor to ceiling. Tap a room to walk into it.</p>
       </div>
