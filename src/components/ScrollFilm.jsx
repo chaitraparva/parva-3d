@@ -7,7 +7,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 //    off the main thread (createImageBitmap), so drawing never stalls on a decode
 //  • the window looks ahead in the direction you are scrolling
 const WINDOW = 10;          // decoded frames kept on each side of the playhead
-const PARALLEL = 6;
+const PARALLEL = 8;
 
 const ScrollFilm = forwardRef(function ScrollFilm({ manifest, className = "" }, ref) {
   const canvas = useRef(null);
@@ -23,7 +23,10 @@ const ScrollFilm = forwardRef(function ScrollFilm({ manifest, className = "" }, 
     const { count, sets, pad = 4, ext = "webp" } = manifest;
     const sorted = [...sets].sort((a, b) => a - b);
     const px = innerWidth * Math.min(devicePixelRatio || 1, 2);
-    const hiSet = sorted.find((x) => x >= px * 0.85) || sorted[sorted.length - 1];
+    const net = navigator.connection || {};
+    const slow = net.saveData || (net.downlink && net.downlink < 4) || /2g|3g/.test(net.effectiveType || "");
+    const cap = slow ? Math.min(innerWidth, 1280) : px;   // on a slow connection, HD = 1280 so it can actually arrive
+    const hiSet = sorted.slice(1).find((x) => x >= cap * 0.85) || sorted[sorted.length - 1];   // never the preview tier
     const loSet = sorted[0];
     const url = (set, i) => `${manifest.base}/${set}/${String(i + 1).padStart(pad, "0")}.${ext}`;
 
@@ -32,32 +35,47 @@ const ScrollFilm = forwardRef(function ScrollFilm({ manifest, className = "" }, 
     const bmp = new Map();                    // i -> { b: ImageBitmap, hi: bool }
     const pending = new Set();
     let alive = true;
+    window.__film = s;
 
-    // ---------- downloading (compressed blobs) ----------
-    const queue = [];
+    // ---------- downloading (compressed blobs), always nearest-the-playhead first ----------
+    // preview tier (tiny, ~20 KB) for every frame; HD only for a window around where you are,
+    // so the connection is never clogged by frames nobody is looking at.
+    const HD_AHEAD = 36, HD_BEHIND = 12, PREVIEW_NEAR = 90;
+    const want = new Uint8Array(count * 2);       // 1 = requested/loaded (lo at i, hi at count+i)
     const order = (n) => { const o = [], seen = new Set(); for (const st of [8, 4, 2, 1]) for (let i = 0; i < n; i += st) if (!seen.has(i)) { seen.add(i); o.push(i); } return o; };
-    order(count).forEach((i) => queue.push(["lo", i]));
-    if (hiSet !== loSet) order(count).forEach((i) => queue.push(["hi", i]));
-    let active = 0;
+    const coarse = order(count);                  // every 8th, 4th, 2nd, then all
+    let ci = 0, c8 = 0, active = 0, dirS = 1, lastHere = 0;
+    const pick = () => {
+      const here = Math.round(s.cur * (count - 1));
+      if (here !== lastHere) { dirS = here > lastHere ? 1 : -1; lastHere = here; }
+      const lo1 = (r) => { for (let d = 0; d <= r; d++) for (const j of [here + d * dirS, here - d * dirS]) if (j >= 0 && j < count && !want[j]) return ["lo", j]; return null; };
+      const hi1 = (ahead, behind) => { if (hiSet === loSet) return null; for (let d = 0; d <= ahead; d++) for (const j of d <= behind ? [here + d * dirS, here - d * dirS] : [here + d * dirS]) if (j >= 0 && j < count && !want[count + j]) return ["hi", j]; return null; };
+      // 1 · preview right around the playhead  2 · HD for the frame you are on (+ a few)
+      // 3 · preview further ahead  4 · HD window ahead
+      const step8 = () => { while (c8 < count && want[c8]) c8 += 8; return c8 < count ? ["lo", c8] : null; };
+      const job = lo1(16) || hi1(4, 2) || step8() || lo1(PREVIEW_NEAR) || hi1(HD_AHEAD, HD_BEHIND);
+      if (job) return job;
+      // 3 · the rest of the preview film, coarse to fine
+      while (ci < coarse.length && want[coarse[ci]]) ci++;
+      if (ci < coarse.length) return ["lo", coarse[ci]];
+      return null;
+    };
     const pump = () => {
-      while (alive && active < PARALLEL && queue.length) {
-        // HD frames near the playhead jump the queue
-        let k = 0;
-        if (queue[0][0] === "hi") {
-          const here = Math.round(s.cur * (count - 1));
-          let best = Infinity;
-          for (let j = 0; j < Math.min(queue.length, 400); j++) { const d = Math.abs(queue[j][1] - here); if (d < best) { best = d; k = j; } }
-        }
-        const [tier, i] = queue.splice(k, 1)[0];
+      while (alive && active < PARALLEL) {
+        const job = pick(); if (!job) break;
+        const [tier, i] = job;
+        want[(tier === "hi" ? count : 0) + i] = 1;
         active++;
         fetch(url(tier === "lo" ? loSet : hiSet, i)).then((r) => (r.ok ? r.blob() : null)).catch(() => null).then((b) => {
           active--;
           if (b) { (tier === "lo" ? lo : hi)[i] = b; if (tier === "hi" && bmp.has(i) && !bmp.get(i).hi) { bmp.get(i).b.close?.(); bmp.delete(i); } }
+          else want[(tier === "hi" ? count : 0) + i] = 0;
           pump();
         });
       }
     };
     pump();
+    const kick = setInterval(pump, 120);   // re-aim the queue as you scroll
 
     // ---------- decoding window (off main thread) ----------
     const decode = (i) => {
@@ -103,6 +121,7 @@ const ScrollFilm = forwardRef(function ScrollFilm({ manifest, className = "" }, 
       const i = Math.round(s.cur * (count - 1));
       maintain(i);
       const f = bmp.get(i) || nearest(i);
+      s.want = i; s.hiOK = !!(f && f.hi); s.hiHave = hi[i] ? 1 : 0; s.hiSet = hiSet;
       if (!f || (f === drawn && !dirty)) return;
       const W = cv.width, H = cv.height, iw = f.b.width, ih = f.b.height;
       const sc = Math.max(W / iw, H / ih), dw = iw * sc, dh = ih * sc, dx = (W - dw) / 2, dy = (H - dh) / 2;
@@ -110,9 +129,10 @@ const ScrollFilm = forwardRef(function ScrollFilm({ manifest, className = "" }, 
       const k = W / cv.getBoundingClientRect().width;
       s.rect = { x: dx / k, y: dy / k, w: dw / k, h: dh / k, iw, ih };
       drawn = f; dirty = false;
+      for (const [k, v] of bmp) if (v === f) { s.shown = k; break; }
     };
     raf = requestAnimationFrame(loop);
-    return () => { alive = false; cancelAnimationFrame(raf); removeEventListener("resize", size); for (const v of bmp.values()) v.b.close?.(); };
+    return () => { clearInterval(kick); alive = false; cancelAnimationFrame(raf); removeEventListener("resize", size); for (const v of bmp.values()) v.b.close?.(); };
   }, [manifest]);
 
   return <canvas ref={canvas} className={`film-canvas ${className}`} />;
