@@ -1,77 +1,118 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
-// Photoreal scroll film (the Reposé technique, done properly):
-// a video is cut into numbered frames; scroll picks the frame and it is drawn on a canvas.
-// • phones get the 960px frame set, laptops 1920px, 4K screens 2560px (if present)
-// • keyframes (every 8th frame) load first so scrubbing works instantly, then the gaps fill in
-// • if a frame isn't loaded yet, the nearest loaded one is shown — never a blank
+// Photoreal scroll film — scroll picks the frame, drawn on a canvas.
+// Built for smoothness at high resolution:
+//  • two tiers: a light 1280px pass for every frame first (instant scrubbing), then the HD set (1920 / 2560)
+//  • frames are kept COMPRESSED in memory; only a small window around the playhead is decoded,
+//    off the main thread (createImageBitmap), so drawing never stalls on a decode
+//  • the window looks ahead in the direction you are scrolling
+const WINDOW = 10;          // decoded frames kept on each side of the playhead
+const PARALLEL = 6;
+
 const ScrollFilm = forwardRef(function ScrollFilm({ manifest, className = "" }, ref) {
   const canvas = useRef(null);
-  const state = useRef({ imgs: [], target: 0, cur: 0, drawn: -1 });
+  const state = useRef({ target: 0, cur: 0 });
 
   useImperativeHandle(ref, () => ({
     setProgress: (p) => { state.current.target = Math.max(0, Math.min(1, p)); },
-    frameRect: () => state.current.rect,   // where the frame sits on screen (for overlays)
+    frameRect: () => state.current.rect,
   }));
 
   useEffect(() => {
     const s = state.current;
     const { count, sets, pad = 4, ext = "webp" } = manifest;
-    // laptops (incl. retina) get 1920; big / 4K screens get 2560; phones 1280
-    const w = innerWidth * Math.min(devicePixelRatio || 1, 1.25);
-    const set = [...sets].sort((a, b) => a - b).find((x) => x >= w * 0.9) || Math.max(...sets);
-    const url = (i) => `${manifest.base}/${set}/${String(i + 1).padStart(pad, "0")}.${ext}`;
-    s.imgs = new Array(count).fill(null);
+    const sorted = [...sets].sort((a, b) => a - b);
+    const px = innerWidth * Math.min(devicePixelRatio || 1, 2);
+    const hiSet = sorted.find((x) => x >= px * 0.85) || sorted[sorted.length - 1];
+    const loSet = sorted[0];
+    const url = (set, i) => `${manifest.base}/${set}/${String(i + 1).padStart(pad, "0")}.${ext}`;
 
-    // load order: every 8th, then every 4th, every 2nd, then the rest
-    const order = [];
-    const seen = new Set();
-    for (const step of [8, 4, 2, 1]) for (let i = 0; i < count; i += step) if (!seen.has(i)) { seen.add(i); order.push(i); }
-    let alive = true, k = 0;
+    const lo = new Array(count).fill(null);   // Blob
+    const hi = new Array(count).fill(null);   // Blob
+    const bmp = new Map();                    // i -> { b: ImageBitmap, hi: bool }
+    const pending = new Set();
+    let alive = true;
+
+    // ---------- downloading (compressed blobs) ----------
+    const queue = [];
+    const order = (n) => { const o = [], seen = new Set(); for (const st of [8, 4, 2, 1]) for (let i = 0; i < n; i += st) if (!seen.has(i)) { seen.add(i); o.push(i); } return o; };
+    order(count).forEach((i) => queue.push(["lo", i]));
+    if (hiSet !== loSet) order(count).forEach((i) => queue.push(["hi", i]));
+    let active = 0;
     const pump = () => {
-      if (!alive || k >= order.length) return;
-      const i = order[k++];
-      const im = new Image();
-      im.decoding = "async";
-      im.onload = () => { (im.decode ? im.decode() : Promise.resolve()).catch(() => {}).then(() => { s.imgs[i] = im; s.drawn = -1; pump(); }); };
-      im.onerror = pump;
-      im.src = url(i);
+      while (alive && active < PARALLEL && queue.length) {
+        // HD frames near the playhead jump the queue
+        let k = 0;
+        if (queue[0][0] === "hi") {
+          const here = Math.round(s.cur * (count - 1));
+          let best = Infinity;
+          for (let j = 0; j < Math.min(queue.length, 400); j++) { const d = Math.abs(queue[j][1] - here); if (d < best) { best = d; k = j; } }
+        }
+        const [tier, i] = queue.splice(k, 1)[0];
+        active++;
+        fetch(url(tier === "lo" ? loSet : hiSet, i)).then((r) => (r.ok ? r.blob() : null)).catch(() => null).then((b) => {
+          active--;
+          if (b) { (tier === "lo" ? lo : hi)[i] = b; if (tier === "hi" && bmp.has(i) && !bmp.get(i).hi) { bmp.get(i).b.close?.(); bmp.delete(i); } }
+          pump();
+        });
+      }
     };
-    for (let c = 0; c < 6; c++) pump();   // 6 parallel requests
+    pump();
 
-    const cv = canvas.current, ctx = cv.getContext("2d");
+    // ---------- decoding window (off main thread) ----------
+    const decode = (i) => {
+      if (pending.has(i)) return;
+      const blob = hi[i] || lo[i];
+      if (!blob) return;
+      const have = bmp.get(i);
+      if (have && (have.hi || !hi[i])) return;
+      pending.add(i);
+      createImageBitmap(blob).then((b) => {
+        pending.delete(i);
+        if (!alive) { b.close?.(); return; }
+        const old = bmp.get(i); if (old) old.b.close?.();
+        bmp.set(i, { b, hi: !!hi[i] });
+      }).catch(() => pending.delete(i));
+    };
+    let dir = 1, lastIdx = 0;
+    const maintain = (idx) => {
+      if (idx !== lastIdx) { dir = idx > lastIdx ? 1 : -1; lastIdx = idx; }
+      decode(idx);
+      for (let d = 1; d <= WINDOW; d++) { decode(idx + d * dir); if (d <= WINDOW / 2) decode(idx - d * dir); }
+      for (const [k, v] of bmp) if (Math.abs(k - idx) > WINDOW * 1.6) { v.b.close?.(); bmp.delete(k); }
+    };
+
+    // ---------- drawing ----------
+    const cv = canvas.current, ctx = cv.getContext("2d", { alpha: false });
+    ctx.imageSmoothingQuality = "high";
+    let drawn = null, dirty = true;
     const size = () => {
       const r = cv.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2);
-      cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); s.drawn = -1;
+      cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); dirty = true;
+      ctx.imageSmoothingQuality = "high";
     };
     size(); addEventListener("resize", size);
+    const nearest = (i) => { for (let d = 0; d < count; d++) { const a = bmp.get(i - d) || bmp.get(i + d); if (a) return a; } return null; };
 
-    const nearest = (i) => {
-      for (let d = 0; d < count; d++) {
-        if (s.imgs[i - d]) return s.imgs[i - d];
-        if (s.imgs[i + d]) return s.imgs[i + d];
-      }
-      return null;
-    };
     let raf, last = performance.now();
     const loop = (t) => {
       raf = requestAnimationFrame(loop);
       const dt = Math.min(0.05, (t - last) / 1000); last = t;
-      s.cur += (s.target - s.cur) * (1 - Math.exp(-dt * 9));
+      s.cur += (s.target - s.cur) * (1 - Math.exp(-dt * 10));
       if (window.__riseSnap) s.cur = s.target;
       const i = Math.round(s.cur * (count - 1));
-      const im = s.imgs[i] || nearest(i);
-      if (!im || (i === s.drawn && s.imgs[i])) return;
-      // cover-fit
-      const W = cv.width, H = cv.height, iw = im.naturalWidth, ih = im.naturalHeight;
+      maintain(i);
+      const f = bmp.get(i) || nearest(i);
+      if (!f || (f === drawn && !dirty)) return;
+      const W = cv.width, H = cv.height, iw = f.b.width, ih = f.b.height;
       const sc = Math.max(W / iw, H / ih), dw = iw * sc, dh = ih * sc, dx = (W - dw) / 2, dy = (H - dh) / 2;
-      ctx.drawImage(im, dx, dy, dw, dh);
-      const d = W / cv.getBoundingClientRect().width;
-      s.rect = { x: dx / d, y: dy / d, w: dw / d, h: dh / d, iw, ih };
-      s.drawn = s.imgs[i] ? i : -1;
+      ctx.drawImage(f.b, dx, dy, dw, dh);
+      const k = W / cv.getBoundingClientRect().width;
+      s.rect = { x: dx / k, y: dy / k, w: dw / k, h: dh / k, iw, ih };
+      drawn = f; dirty = false;
     };
     raf = requestAnimationFrame(loop);
-    return () => { alive = false; cancelAnimationFrame(raf); removeEventListener("resize", size); };
+    return () => { alive = false; cancelAnimationFrame(raf); removeEventListener("resize", size); for (const v of bmp.values()) v.b.close?.(); };
   }, [manifest]);
 
   return <canvas ref={canvas} className={`film-canvas ${className}`} />;

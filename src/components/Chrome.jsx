@@ -206,7 +206,7 @@ export function FlowStack() {
         sts.push(ScrollTrigger.create({
           trigger: next.box, start: "top bottom", end: "top top", scrub: true,
           onUpdate: (s) => {
-            if (!titled) return;
+            if (true) return;                                      // no chapter words — the film carries the story
             const p = s.progress, o = Math.sin(Math.PI * Math.min(1, Math.max(0, (p - 0.08) / 0.84)));
             card.children[0].textContent = n; card.children[1].textContent = name;
             card.style.opacity = o.toFixed(3); card.style.setProperty("--p", p.toFixed(3));

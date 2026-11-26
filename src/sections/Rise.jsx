@@ -11,7 +11,13 @@ import { VIDEOS, heroSrc } from "../data/images.js";
 
 // 01 — The Rise. One continuous, scroll-driven 3D shot:
 // clouds → Dubai from above → the tower is built floor by floor → rooftop → dusk → pick a floor.
-const SCENE_END = 0.9;     // last 10% of the scroll holds the explorer still
+// The pin now carries two acts of ONE unbroken shot:
+//   act 1 (rise)   0 → K       : clouds → construction → dusk → explorer hold (old 1050% of scroll)
+//   act 2 (arrive) K → 1       : the camera drops to the entrance, through the doors, across the lobby,
+//                                into the private lift — doors open onto the penthouse
+const PIN = 1850;                 // % of viewport
+const K = 1050 / PIN;             // where act 1 ends
+const SCENE_END = 0.9 * K;        // rise film ends here; the explorer holds until K
 const RISE_WIN = [0.35, 0.66]; // where the construction happens in the film (fraction of the film)
 
 const STAGES = [
@@ -47,8 +53,14 @@ export default function Rise({ ready }) {
     const loop = () => {
       raf = requestAnimationFrame(loop);
       const p = target.current;
-      film.current?.setProgress(p);
-      drawHud(p);
+      // act 1 plays frames 0..rise-1, holds on the last during the explorer, act 2 plays the arrival frames
+      const n1 = manifest?.acts?.[0] ?? manifest?.count ?? 1, n = manifest?.count ?? 1;
+      let f;
+      if (p < SCENE_END) f = (p / SCENE_END) * (n1 - 1);
+      else if (p < K || n === n1) f = n1 - 1;
+      else f = n1 - 1 + ((p - K) / (1 - K)) * (n - n1);
+      film.current?.setProgress(f / Math.max(1, n - 1));
+      drawHud(Math.min(1, p / SCENE_END));
       // keep the floor bands glued to the tower in the final frame
       const g = manifest?.tower, r = film.current?.frameRect?.(), b = bandsRef.current;
       // zoom origin = the lobby entrance in the final frame
@@ -82,12 +94,13 @@ export default function Rise({ ready }) {
   // ---- one long pinned scroll: progress feeds the 3D world; captions ride the same timeline ----
   useGSAP(() => {
     const at = (p) => p * SCENE_END;
+    const ac = (p) => K + p * (1 - K);   // position inside act 2
     const tl = gsap.timeline({
       scrollTrigger: {
-        trigger: root.current, start: "top top", end: "+=1050%", pin: true, scrub: 0.6, anticipatePin: 1,
+        trigger: root.current, start: "top top", end: `+=${PIN}%`, pin: true, scrub: 0.6, anticipatePin: 1,
         onUpdate: (st) => {
-          target.current = Math.min(1, st.progress / SCENE_END);
-          const ex = st.progress > at(0.9) && st.progress < 0.975;
+          target.current = st.progress;
+          const ex = st.progress > at(0.9) && st.progress < 0.975 * K;
           setExploring((v) => (v === ex ? v : ex));
         },
       },
@@ -121,7 +134,16 @@ export default function Rise({ ready }) {
       .fromTo(".rise .c-explore h2 .c", { yPercent: 110 }, { yPercent: 0, stagger: 0.002, duration: at(0.04), ease: "power3.out" }, at(0.89))
       .fromTo(".rise .rail", { autoAlpha: 0, x: 30 }, { autoAlpha: 1, x: 0, duration: at(0.04) }, at(0.91))
       // explorer UI eases away just before the dissolve into the next chapter
-      .to(".rise .c-explore, .rise .rail, .rise .leftshade", { autoAlpha: 0, duration: 0.02 }, 0.975);
+      .to(".rise .c-explore, .rise .rail, .rise .leftshade", { autoAlpha: 0, duration: 0.02 * K }, 0.975 * K)
+      // act 2 — arrival, all inside the same shot
+      .fromTo(".rise .c-gate .c", { yPercent: 110 }, { yPercent: 0, stagger: 0.002, duration: 0.03, ease: "power3.out" }, ac(0.14))
+      .fromTo(".rise .c-gate p, .rise .c-gate .eyebrow", { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.025 }, ac(0.17))
+      .to(".rise .c-gate", { autoAlpha: 0, y: -30, duration: 0.025 }, ac(0.32))
+      .fromTo(".rise .c-lobby .c", { yPercent: 110 }, { yPercent: 0, stagger: 0.002, duration: 0.03, ease: "power3.out" }, ac(0.46))
+      .fromTo(".rise .c-lobby p, .rise .c-lobby .eyebrow", { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.025 }, ac(0.48))
+      .to(".rise .c-lobby", { autoAlpha: 0, y: -30, duration: 0.025 }, ac(0.63))
+      .fromTo(".rise .c-home .c", { yPercent: 110 }, { yPercent: 0, stagger: 0.002, duration: 0.03, ease: "power3.out" }, ac(0.76))
+      .fromTo(".rise .c-home p, .rise .c-home .eyebrow", { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.025 }, ac(0.79));
   }, { scope: root });
 
   // intro choreography after the loader
@@ -194,6 +216,22 @@ export default function Rise({ ready }) {
           <div><b>1</b><span>Rooftop penthouse</span></div>
           <div><b>12</b><span>Amenities</span></div>
         </div>
+      </div>
+
+      <div className="c-gate">
+        <div className="eyebrow">Ground floor — the arrival</div>
+        <h2><Chars text={"Come"} /><br /><span className="it"><Chars text={"home."} /></span></h2>
+        <p>Double-height glass between two still pools. The city noise stops at the first step.</p>
+      </div>
+      <div className="c-lobby">
+        <div className="eyebrow">The lobby</div>
+        <h2><Chars text={"Nine metres"} /><br /><span className="it"><Chars text={"of travertine."} /></span></h2>
+        <p>Book-matched stone, bronze fins and an olive tree growing out of the water.</p>
+      </div>
+      <div className="c-home">
+        <div className="eyebrow">Private lift</div>
+        <h2><Chars text={"The doors open"} /><br /><span className="it"><Chars text={"onto your home."} /></span></h2>
+        <p>Every residence is served by its own lift, straight into the living room.</p>
       </div>
 
       <div className="c-explore">

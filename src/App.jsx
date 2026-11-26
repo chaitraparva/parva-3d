@@ -52,11 +52,10 @@ export default function App() {
       <Grain />
       <Nav />
       <Progress />
-      <Chapter />
+      
       <FlowStack />
       <main ref={main}>
         <Rise ready={ready} />
-        <Arrival />
         <StepInside />
         <Kitchen />
         <Tour />
