@@ -113,7 +113,7 @@ export const PLANS = {
 };
 
 export const AMENITIES = [
-  { name: "Infinity pool", note: "Edge-to-sky water on the podium deck.", img: "auresta" },
+  { name: "Infinity pool", note: "Edge-to-sky water on the podium deck.", img: "pool2" },
   { name: "Rooftop sky lounge", note: "Twelve floors up, with the whole city as the view.", img: "towerdusk" },
   { name: "Adults' swimming pool", note: "A quiet lap pool, kept for lengths, not splashing.", img: "pool" },
   { name: "Residents' gym", note: "Open from first light, with garden views.", img: "gym" },

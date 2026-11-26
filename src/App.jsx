@@ -53,7 +53,6 @@ export default function App() {
       <Nav />
       <Progress />
       
-      <FlowStack />
       <main ref={main}>
         <Rise ready={ready} />
         <StepInside />

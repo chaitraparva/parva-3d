@@ -175,7 +175,7 @@ export function Generation() {
           </p>
         </div>
       </div>
-      <div className="media arch-img par" data-speed="-0.12" style={{ gridColumn: "8 / 13", aspectRatio: ".74", borderRadius: "999px", marginTop: "6rem" }} data-clip><Img k="enre" className="par-img" /></div>
+      <div className="media arch-img par" data-speed="-0.12" style={{ gridColumn: "8 / 13", aspectRatio: ".74", borderRadius: "999px", marginTop: "6rem" }} data-clip><Img k="tower3" className="par-img" /></div>
     </section>
   );
 }
