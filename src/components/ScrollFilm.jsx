@@ -17,7 +17,8 @@ const ScrollFilm = forwardRef(function ScrollFilm({ manifest, className = "" }, 
   useEffect(() => {
     const s = state.current;
     const { count, sets, pad = 4, ext = "webp" } = manifest;
-    const w = innerWidth * Math.min(devicePixelRatio || 1, 2);
+    // laptops (incl. retina) get 1920; big / 4K screens get 2560; phones 1280
+    const w = innerWidth * Math.min(devicePixelRatio || 1, 1.25);
     const set = [...sets].sort((a, b) => a - b).find((x) => x >= w * 0.9) || Math.max(...sets);
     const url = (i) => `${manifest.base}/${set}/${String(i + 1).padStart(pad, "0")}.${ext}`;
     s.imgs = new Array(count).fill(null);

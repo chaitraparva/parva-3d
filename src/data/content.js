@@ -34,8 +34,8 @@ export const PLATES = {
   R: { name: "Rooftop penthouse", core: false, units: [["W", "roof"]] },
 };
 
-export const FIRST_FLOOR = 1, LAST_FLOOR = 15;
-export const plateFor = (f) => (f <= 4 ? "A" : f <= 8 ? "B" : f <= 11 ? "C" : f <= 13 ? "D" : f === 14 ? "V" : "R");
+export const FIRST_FLOOR = 1, LAST_FLOOR = 12;
+export const plateFor = (f) => (f <= 3 ? "A" : f <= 6 ? "B" : f <= 9 ? "C" : f === 10 ? "D" : f === 11 ? "V" : "R");
 export const FLOORS = Array.from({ length: LAST_FLOOR - FIRST_FLOOR + 1 }, (_, i) => {
   const n = FIRST_FLOOR + i, plate = plateFor(n);
   return {
@@ -45,7 +45,7 @@ export const FLOORS = Array.from({ length: LAST_FLOOR - FIRST_FLOOR + 1 }, (_, i
 });
 
 // Where the floors sit on the building photo, in the photo's own pixels (1200 x 1800).
-// Levels 01–14 run from `bottom` up to `top`; Level 15 (rooftop) runs from `top` up to `roofTop`.
+// Levels 01–11 run from `bottom` up to `top`; Level 12 (rooftop) runs from `top` up to `roofTop`.
 // Tweak these if you swap the building photo.
 export const TOWER_GEO = { w: 1200, h: 1800, left: 222, right: 1150, bottom: 1464, top: 180, roofTop: 120 };
 
@@ -114,7 +114,7 @@ export const PLANS = {
 
 export const AMENITIES = [
   { name: "Infinity pool", note: "Edge-to-sky water on the podium deck.", img: "auresta" },
-  { name: "Rooftop sky lounge", note: "Fourteen floors up, with the whole city as the view.", img: "roofgarden" },
+  { name: "Rooftop sky lounge", note: "Twelve floors up, with the whole city as the view.", img: "roofgarden" },
   { name: "Adults' swimming pool", note: "A quiet lap pool, kept for lengths, not splashing.", img: "pool" },
   { name: "Residents' gym", note: "Open from first light, with garden views.", img: "gym" },
   { name: "Wellness studio", note: "Yoga, pilates and stretch, morning and evening.", img: "gym2" },

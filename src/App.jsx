@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, startSmoothScroll } from "./lib/smooth.js";
 import Loader from "./components/Loader.jsx";
-import { Nav, Progress, Cursor, Grain, Marquee, Chapter, useFontsRefresh } from "./components/Chrome.jsx";
+import { Nav, Progress, Cursor, Grain, Marquee, Chapter, FlowStack, useFontsRefresh } from "./components/Chrome.jsx";
 import Rise from "./sections/Rise.jsx";
 import Arrival from "./sections/Arrival.jsx";
 import StepInside from "./sections/StepInside.jsx";
@@ -53,10 +53,11 @@ export default function App() {
       <Nav />
       <Progress />
       <Chapter />
+      <FlowStack />
       <main ref={main}>
         <Rise ready={ready} />
         <Arrival />
-        <Marquee words={["Considered", "Crafted", "Celebrated", "Fourteen floors", "One rooftop", "Dubai"]} tone="light" />
+        <Marquee words={["Considered", "Crafted", "Celebrated", "Eleven floors", "One rooftop", "Dubai"]} tone="light" />
         <StepInside />
         <Kitchen />
         <Tour />

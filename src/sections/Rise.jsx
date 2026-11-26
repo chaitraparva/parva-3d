@@ -26,6 +26,7 @@ export default function Rise({ ready }) {
   const film = useRef(null);
   const vid = useRef(null);
   const bandsRef = useRef(null);
+  const zoomRef = useRef(null);
   const target = useRef(0);
   const hud = useRef({});
   const [manifest, setManifest] = useState(undefined);   // undefined = loading, null = no film yet
@@ -50,10 +51,12 @@ export default function Rise({ ready }) {
       drawHud(p);
       // keep the floor bands glued to the tower in the final frame
       const g = manifest?.tower, r = film.current?.frameRect?.(), b = bandsRef.current;
+      // zoom origin = the lobby entrance in the final frame
+      const gw = manifest?.tower?.iw || 1280;   // tower/lobby points are in 1280-wide frame coordinates
+      if (r && zoomRef.current) { const k = r.w / gw; zoomRef.current.style.transformOrigin = `${r.x + 655 * k}px ${r.y + 600 * k}px`; }
       if (g && r && b) {
-        const k = r.w / r.iw;
         b.style.transform = `translate(${r.x}px, ${r.y}px)`;
-        b.style.width = `${r.iw * k}px`; b.style.height = `${r.ih * k}px`;
+        b.style.width = `${r.w}px`; b.style.height = `${r.h}px`;
       }
     };
     raf = requestAnimationFrame(loop);
@@ -68,8 +71,8 @@ export default function Rise({ ready }) {
     if (!h.num) return;
     const [a0, a1] = RISE_WIN;
     const b = Math.min(1, Math.max(0, (p - a0) / (a1 - a0)));
-    const lvl = Math.min(15, Math.floor(b * 19));
-    const txt = lvl >= 15 ? "RF" : String(lvl).padStart(2, "0");
+    const lvl = Math.min(12, Math.floor(b * 15));
+    const txt = lvl >= 12 ? "RF" : String(lvl).padStart(2, "0");
     if (h.num.textContent !== txt) h.num.textContent = txt;
     h.bar.style.transform = `scaleY(${b})`;
     let s = STAGES[0]; for (const st of STAGES) if (b >= st[0]) s = st;
@@ -81,10 +84,10 @@ export default function Rise({ ready }) {
     const at = (p) => p * SCENE_END;
     const tl = gsap.timeline({
       scrollTrigger: {
-        trigger: root.current, start: "top top", end: "+=1000%", pin: true, scrub: 0.6, anticipatePin: 1,
+        trigger: root.current, start: "top top", end: "+=1100%", pin: true, scrub: 0.6, anticipatePin: 1,
         onUpdate: (st) => {
           target.current = Math.min(1, st.progress / SCENE_END);
-          const ex = st.progress > at(0.9);
+          const ex = st.progress > at(0.9) && st.progress < 0.925;
           setExploring((v) => (v === ex ? v : ex));
         },
       },
@@ -116,7 +119,12 @@ export default function Rise({ ready }) {
       // explorer
       .fromTo(".rise .c-explore", { autoAlpha: 0 }, { autoAlpha: 1, duration: at(0.03) }, at(0.89))
       .fromTo(".rise .c-explore h2 .c", { yPercent: 110 }, { yPercent: 0, stagger: 0.002, duration: at(0.04), ease: "power3.out" }, at(0.89))
-      .fromTo(".rise .rail", { autoAlpha: 0, x: 30 }, { autoAlpha: 1, x: 0, duration: at(0.04) }, at(0.91));
+      .fromTo(".rise .rail", { autoAlpha: 0, x: 30 }, { autoAlpha: 1, x: 0, duration: at(0.04) }, at(0.91))
+      // fly into the lit lobby → the bronze lift doors of the next chapter
+      .to(".rise .c-explore, .rise .rail, .rise .leftshade", { autoAlpha: 0, duration: 0.015 }, 0.925)
+      .to(".rise .zoomwrap", { scale: 3.4, duration: 0.07, ease: "power2.in" }, 0.93)
+      .to(".rise .vignette", { opacity: 0, duration: 0.03 }, 0.93)
+      .fromTo(".rise .bronze", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.035, ease: "power1.in" }, 0.962);
   }, { scope: root });
 
   // intro choreography after the loader
@@ -136,6 +144,7 @@ export default function Rise({ ready }) {
 
   return (
     <section className={`rise pin ${exploring ? "is-exploring" : ""} ${hover ? "is-hover" : ""} ${manifest === null ? "no-film" : ""}`} id="top" ref={root} data-chapter="01|The rise">
+      <div className="zoomwrap" ref={zoomRef}>
       {manifest ? (
         <ScrollFilm ref={film} manifest={manifest} className="gl" />
       ) : (
@@ -145,6 +154,7 @@ export default function Rise({ ready }) {
           <div className="tower-photo"><Img k="residence" eager /><TowerBands geo={TOWER_GEO} hover={hover} setHover={setHover} enter={setFloorN} /></div>
         </>
       )}
+      </div>
       {manifest?.tower && (
         <svg ref={bandsRef} className="film-bands" viewBox={`0 0 ${manifest.tower.iw} ${manifest.tower.ih}`} preserveAspectRatio="none">
           <Bands geo={manifest.tower} hover={hover} setHover={setHover} enter={setFloorN} />
@@ -153,6 +163,7 @@ export default function Rise({ ready }) {
       <div className="fill vignette" />
       <div className="fill leftshade" />
       <div id="residences" className="anchor" />
+      <div className="bronze"><span className="ind"><i>▲</i>Arriving · Lobby</span></div>
 
       <div className="c-hero">
         <div className="mark"><Chars text={"Parva"} /></div>
@@ -169,21 +180,21 @@ export default function Rise({ ready }) {
       <div className="c-ready"><h2><Chars text={"Ready"} /><br /><span className="it"><Chars text={"to rise."} /></span></h2></div>
 
       <div className="c-build">
-        <div className="lv"><span className="k">Level</span><b ref={(e) => (hud.current.num = e)}>00</b><span className="of">/ 14 + roof</span></div>
+        <div className="lv"><span className="k">Level</span><b ref={(e) => (hud.current.num = e)}>00</b><span className="of">/ 11 + roof</span></div>
         <div className="st"><em ref={(e) => (hud.current.stage = e)}>Groundwork</em><span ref={(e) => (hud.current.note = e)}>The plot is cleared and the foundations go in.</span></div>
         <div className="track"><i ref={(e) => (hud.current.bar = e)} /></div>
       </div>
 
       <div className="c-roof">
-        <h2><Chars text={"One rooftop."} /><br /><span className="it"><Chars text={"Fourteen floors beneath it."} /></span></h2>
+        <h2><Chars text={"One rooftop."} /><br /><span className="it"><Chars text={"Eleven floors beneath it."} /></span></h2>
         <p>An infinity pool, a pergola lounge and the whole city as the view.</p>
       </div>
 
       <div className="c-dusk">
         <h2><Chars text={"Lit from"} /><br /><span className="it"><Chars text={"within."} /></span></h2>
         <div className="stats">
-          <div><b>14</b><span>Residential floors</span></div>
-          <div><b>62</b><span>Residences</span></div>
+          <div><b>11</b><span>Residential floors</span></div>
+          <div><b>48</b><span>Residences</span></div>
           <div><b>1</b><span>Rooftop penthouse</span></div>
           <div><b>12</b><span>Amenities</span></div>
         </div>
@@ -196,7 +207,7 @@ export default function Rise({ ready }) {
         <p className="hint-m">Tap a floor on the tower or the list</p>
         <div className="hover-info">
           {hf ? (<><b>{hf.label}</b><span>{hf.units.length} residences · {PLATES[hf.plate].name}</span></>)
-              : (<><b>14 floors + rooftop</b><span>Studios · 1–4 BHK · Sky villa · Rooftop</span></>)}
+              : (<><b>11 floors + rooftop</b><span>Studios · 1–4 BHK · Sky villa · Rooftop</span></>)}
         </div>
       </div>
       <div className="rail" data-lenis-prevent>
@@ -214,14 +225,24 @@ export default function Rise({ ready }) {
   );
 }
 
-// floor bands over the tower (geometry in image pixels: left/right/top/bottom of the residential floors, roofTop)
+// floor bands over the tower. Film mode: one traced polygon per real floor slab (geo.floors, bottom → top).
+// Photo mode: even bands (geo.left/right/top/bottom/roofTop).
 function Bands({ geo, hover, setHover, enter }) {
+  if (geo.floors) {
+    return FLOORS.map((f, i) => {
+      const pts = geo.floors[i];
+      if (!pts) return null;
+      return (
+        <polygon key={f.n} className={`band ${hover === f.n ? "on" : ""}`} points={pts.map((p) => p.join(",")).join(" ")}
+          onMouseEnter={() => setHover(f.n)} onMouseLeave={() => setHover(null)} onClick={() => enter(f.n)} />
+      );
+    });
+  }
   const { left, right, top, bottom, roofTop } = geo;
   const count = LAST_FLOOR - FIRST_FLOOR + 1, resi = count - 1, fh = (bottom - top) / resi;
   const band = (n) => (n === LAST_FLOOR ? { y: roofTop, h: top - roofTop } : { y: bottom - (n - FIRST_FLOOR + 1) * fh, h: fh });
   return FLOORS.map((f) => (
     <rect key={f.n} className={`band ${hover === f.n ? "on" : ""}`} x={left - 8} y={band(f.n).y} width={right - left + 16} height={band(f.n).h}
-      fill={TYPE_COLORS[PLATES[f.plate].units[0][1]]}
       onMouseEnter={() => setHover(f.n)} onMouseLeave={() => setHover(null)} onClick={() => enter(f.n)} />
   ));
 }

@@ -147,7 +147,7 @@ export function Finale() {
   return (
     <section className="finale pin" ref={root} data-chapter="08|Enquire">
       <div className="word">Parva</div>
-      <div className="window"><div className="media"><Img k="residence" /></div></div>
+      <div className="window"><div className="media"><Img k="towerdusk" /></div></div>
       <div className="tagline">Celebrate <span className="it">the everyday.</span></div>
       <div className="endcard">
         <div><div className="eyebrow" style={{ opacity: 0.8 }}>Now registering</div><h3 style={{ marginTop: ".8rem" }}>Parva<br />Residences</h3></div>

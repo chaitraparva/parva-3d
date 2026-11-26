@@ -4,7 +4,7 @@ import { gsap, ScrollTrigger, scrollToTarget, lockScroll } from "../lib/smooth.j
 import Img from "./Img.jsx";
 
 const LINKS = [
-  ["#residences", "Residences", "Fourteen floors, one rooftop", "residence"],
+  ["#residences", "Residences", "Eleven floors, one rooftop", "residence"],
   ["#interiors", "Interiors", "Stone, oak and evening light", "living"],
   ["#amenities", "Amenities", "A dozen reasons to stay in", "pool"],
   ["#life", "A day at Parva", "Morning coffee to the last light", "terrace"],
@@ -164,4 +164,27 @@ export function Chapter() {
       <b>{ch?.[0]}</b><i /><span className="nm"><span key={ch?.[1]}>{ch?.[1]}</span></span>
     </div>
   );
+}
+
+// Continuous flow: every section slides up over the one before it, which dims and drifts back underneath.
+export function FlowStack() {
+  useEffect(() => {
+    let sts = [];
+    const t = setTimeout(() => {
+      const main = document.querySelector("main");
+      const items = [...main.children].map((c) => ({ box: c, el: c.classList.contains("pin-spacer") ? c.firstElementChild : c }));
+      items.forEach(({ el }, i) => { el.classList.add("flow-sec"); el.style.zIndex = String(i + 1); });
+      for (let i = 0; i < items.length - 1; i++) {
+        const prev = items[i].el, next = items[i + 1].box;
+        sts.push(ScrollTrigger.create({
+          trigger: next, start: "top bottom", end: "top top", scrub: true,
+          onUpdate: (s) => prev.style.setProperty("--leave", s.progress.toFixed(4)),
+          onLeaveBack: () => prev.style.setProperty("--leave", "0"),
+        }));
+      }
+      ScrollTrigger.refresh();
+    }, 900);
+    return () => { clearTimeout(t); sts.forEach((s) => s.kill()); };
+  }, []);
+  return null;
 }

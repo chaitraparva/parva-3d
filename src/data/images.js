@@ -6,6 +6,7 @@
 const PR = "https://www.parvarealty.ae/assets/";
 
 export const IMAGES = {
+  towerdusk: { note: "Parva Residences at blue hour (from the opening film)" },
   // Arrival sequence
   arrive1:    { id: "T66U5HVG81U", url: "https://images.unsplash.com/photo-1758448756084-c44d73014c07?w=3840&q=85&auto=format&fit=crop", note: "Double-height lobby with garden windows" },
   arrive2:    { id: "4yIOHhuZFKg", url: "https://images.unsplash.com/photo-1758448755981-954afbf60ff7?w=3840&q=85&auto=format&fit=crop", note: "Marble lounge with ambient lighting" },
@@ -57,7 +58,7 @@ export const IMAGES = {
 
 // Direct image links (Unsplash's /download links are now behind a bot check, so they can't be hot-linked).
 // Keys that have files in /public/img (with -800 / -1600 / -2400 / -64 copies made by `npm run images`).
-export const LOCAL = new Set(["aerial","atrium","balcony","bath","bedroom","bedroom2","clouds","coast","courtyard","courtyard2","entrance","gym","gym2","kitchen","kitchen2","kitchen3","kitchen4","lift","living","lobby","lobby2","play","play2","pool","pool2","roofs","sauna","skyline","terrace","tower","tower2","tower3"]);
+export const LOCAL = new Set(["aerial","atrium","balcony","bath","bedroom","bedroom2","clouds","coast","courtyard","courtyard2","entrance","gym","gym2","kitchen","kitchen2","kitchen3","kitchen4","lift","living","lobby","lobby2","play","play2","pool","pool2","roofs","sauna","skyline","terrace","tower","tower2","tower3","towerdusk"]);
 
 // Responsive candidates for an image key: phones get ~800–1600px, desktops 2400px, 4K screens 3840px.
 export function sources(key) {
