@@ -896,5 +896,11 @@ html, body { overflow-x: clip; }
   font-size: .58rem; letter-spacing: .34em; text-transform: uppercase; color: #e2c99a; margin-top: -40vh; }
 
 /* sections flow into each other: the next one slides over, the previous dims and drifts back */
-.flow-sec { position: relative; translate: 0 calc(var(--leave, 0) * 28vh); }
-.flow-sec::after { content: ""; position: absolute; inset: 0; background: #070605; opacity: calc(var(--leave, 0) * .75); pointer-events: none; z-index: 50; }
+.dip { position: absolute; inset: 0; z-index: 90; background: #060505; opacity: 0; pointer-events: none; }
+
+/* chapter title card shown in the dark between chapters */
+.ccard { position: fixed; inset: 0; z-index: 140; pointer-events: none; opacity: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.2rem; color: var(--paper); }
+.ccard em { font-style: normal; font-size: .62rem; letter-spacing: .5em; color: #e2c99a; }
+.ccard b { font-family: var(--serif); font-weight: 400; font-style: italic; font-size: 6.4rem; line-height: 1; letter-spacing: -.02em; transform: translateY(calc((0.5 - var(--p, .5)) * 2.4rem)); }
+.ccard i { width: 1px; height: 4rem; background: linear-gradient(#e2c99a, transparent); }
+@media (max-width: 900px) { .ccard b { font-size: 3.2rem; } }

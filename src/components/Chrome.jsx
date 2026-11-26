@@ -166,25 +166,63 @@ export function Chapter() {
   );
 }
 
-// Continuous flow: every section slides up over the one before it, which dims and drifts back underneath.
+// Continuous flow — chapters hand over like a film edit: the scene darkens to black while still on screen,
+// a title card for the next chapter appears in the dark, and the next scene fades up once it is fully in place.
+// Black meets black, so no edge is ever visible. Two light sections in a row just scroll on naturally.
 export function FlowStack() {
   useEffect(() => {
     let sts = [];
+    const card = document.createElement("div");
+    card.className = "ccard"; card.innerHTML = "<em></em><b></b><i></i>";
+    document.body.appendChild(card);
     const t = setTimeout(() => {
       const main = document.querySelector("main");
       const items = [...main.children].map((c) => ({ box: c, el: c.classList.contains("pin-spacer") ? c.firstElementChild : c }));
-      items.forEach(({ el }, i) => { el.classList.add("flow-sec"); el.style.zIndex = String(i + 1); });
-      for (let i = 0; i < items.length - 1; i++) {
-        const prev = items[i].el, next = items[i + 1].box;
+      const lum = (el) => {
+        const m = getComputedStyle(el).backgroundColor.match(/\d+(\.\d+)?/g);
+        if (!m || (m[3] !== undefined && +m[3] === 0)) return 0;
+        return (0.299 * m[0] + 0.587 * m[1] + 0.114 * m[2]) / 255;
+      };
+      const chap = (el) => (el.dataset.chapter || el.querySelector("[data-chapter]")?.dataset.chapter || "").split("|");
+      items.forEach(({ el }) => {
+        if (getComputedStyle(el).position === "static") el.style.position = "relative";
+        const d = document.createElement("div"); d.className = "dip"; el.appendChild(d); el._dip = d; el._in = 0; el._out = 0;
+      });
+      const paint = (el) => { el._dip.style.opacity = Math.max(el._in, el._out).toFixed(3); };
+      for (let i = 1; i < items.length; i++) {
+        const prev = items[i - 1], next = items[i];
+        const [n, name] = chap(next.el), [pn] = chap(prev.el);
+        const titled = n && (n !== pn || name !== chap(prev.el)[1]);
+        const bothScenes = prev.box.classList.contains("pin-spacer") && next.box.classList.contains("pin-spacer");
+        if (!titled && !bothScenes) continue;                            // same chapter: just scroll on
+        next.el._in = 1; paint(next.el);
+        // 1 · current scene darkens while still on screen
         sts.push(ScrollTrigger.create({
-          trigger: next, start: "top bottom", end: "top top", scrub: true,
-          onUpdate: (s) => prev.style.setProperty("--leave", s.progress.toFixed(4)),
-          onLeaveBack: () => prev.style.setProperty("--leave", "0"),
+          trigger: prev.box, start: "bottom 160%", end: "bottom bottom", scrub: true,
+          onUpdate: (s) => { prev.el._out = Math.pow(s.progress, 1.3); paint(prev.el); },
+          onLeaveBack: () => { prev.el._out = 0; paint(prev.el); },
+        }));
+        // 2 · in the dark: the next chapter's title card
+        sts.push(ScrollTrigger.create({
+          trigger: next.box, start: "top bottom", end: "top top", scrub: true,
+          onUpdate: (s) => {
+            if (!titled) return;
+            const p = s.progress, o = Math.sin(Math.PI * Math.min(1, Math.max(0, (p - 0.08) / 0.84)));
+            card.children[0].textContent = n; card.children[1].textContent = name;
+            card.style.opacity = o.toFixed(3); card.style.setProperty("--p", p.toFixed(3));
+          },
+          onLeave: () => { card.style.opacity = 0; }, onLeaveBack: () => { card.style.opacity = 0; },
+        }));
+        // 3 · next scene fades up once it is in place
+        sts.push(ScrollTrigger.create({
+          trigger: next.box, start: "top top", end: "+=45%", scrub: true,
+          onUpdate: (s) => { next.el._in = 1 - s.progress; paint(next.el); },
+          onLeaveBack: () => { next.el._in = 1; paint(next.el); },
         }));
       }
       ScrollTrigger.refresh();
     }, 900);
-    return () => { clearTimeout(t); sts.forEach((s) => s.kill()); };
+    return () => { clearTimeout(t); sts.forEach((s) => s.kill()); card.remove(); };
   }, []);
   return null;
 }

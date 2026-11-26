@@ -151,7 +151,7 @@ export function Above() {
     gsap.from(".above .note", { opacity: 0, y: 30, duration: 1.2, scrollTrigger: { trigger: root.current, start: "top 35%" } });
   }, { scope: root });
   return (
-    <section className="above pin" ref={root} data-chapter="04|Amenities">
+    <section className="above pin" ref={root} data-chapter="04|The rooftop">
       <div className="fill media"><Img k="roofpool" /></div>
       <div className="fill" style={{ background: "linear-gradient(0deg, rgba(0,0,0,.45), rgba(0,0,0,0) 55%)" }} />
       <h2><Words text={"Dinner above\n*the* *skyline.*"} /></h2>

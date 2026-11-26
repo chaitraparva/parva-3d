@@ -5,7 +5,7 @@ import Img from "../components/Img.jsx";
 import Spots from "../components/Spots.jsx";
 import { Chars } from "../components/Split.jsx";
 
-// 04 — Arrival. Bronze lift doors with "Welcome" split across them slide open onto the lobby
+// 02 — Arrival. Opens on the lobby
 // (materials called out with hotspots), the lounge rises in as a capsule card, then the
 // residents' lounge opens out to fill the screen.
 const LOBBY = [
@@ -27,11 +27,8 @@ export default function Arrival() {
       defaults: { ease: "none" },
     });
     // 1 · doors part onto the lobby
-    tl.to(".arrival .door.l", { xPercent: -101, duration: 0.24, ease: "power2.inOut" }, 0.04)
-      .to(".arrival .door.r", { xPercent: 101, duration: 0.24, ease: "power2.inOut" }, 0.04)
-      .to(".arrival .ind", { autoAlpha: 0, y: -20, duration: 0.06 }, 0.04)
-      .fromTo(".arrival .a1 .zoom", { scale: 1.3 }, { scale: 1, duration: 0.3 }, 0)
-      .fromTo(".arrival .a1 .veil", { opacity: 0.7 }, { opacity: 0.12, duration: 0.24 }, 0.04)
+    tl.fromTo(".arrival .a1 .zoom", { scale: 1.12 }, { scale: 1, duration: 0.3 }, 0)
+      .fromTo(".arrival .a1 .veil", { opacity: 0.35 }, { opacity: 0.12, duration: 0.2 }, 0)
       .fromTo(".arrival .chap > *", { opacity: 0, y: 14 }, { opacity: 1, y: 0, stagger: 0.02, duration: 0.06 }, 0.2)
       .fromTo(".arrival .l1 .c", { yPercent: 110 }, { yPercent: 0, stagger: 0.004, duration: 0.1, ease: "power3.out" }, 0.22)
       .fromTo(".arrival .a1 .spot", { autoAlpha: 0, scale: 0.6 }, { autoAlpha: 1, scale: 1, stagger: 0.03, duration: 0.06, ease: "back.out(2)" }, 0.26)
@@ -76,10 +73,6 @@ export default function Arrival() {
       <div className="line l2"><Chars text={"Stay like you"} /><br /><span className="it"><Chars text={"own the place."} /></span></div>
       <div className="facts"><span>Double-height lobby</span><span>24/7 concierge</span><span>Valet</span><span>Residents' lounge</span></div>
 
-      {/* lift doors */}
-      <div className="door l"><div className="half"><span>Wel</span></div></div>
-      <div className="door r"><div className="half"><span>come</span></div></div>
-      <div className="ind"><i>▲</i><span>Arriving · Lobby</span></div>
     </section>
   );
 }

@@ -84,10 +84,10 @@ export default function Rise({ ready }) {
     const at = (p) => p * SCENE_END;
     const tl = gsap.timeline({
       scrollTrigger: {
-        trigger: root.current, start: "top top", end: "+=1100%", pin: true, scrub: 0.6, anticipatePin: 1,
+        trigger: root.current, start: "top top", end: "+=1050%", pin: true, scrub: 0.6, anticipatePin: 1,
         onUpdate: (st) => {
           target.current = Math.min(1, st.progress / SCENE_END);
-          const ex = st.progress > at(0.9) && st.progress < 0.925;
+          const ex = st.progress > at(0.9) && st.progress < 0.975;
           setExploring((v) => (v === ex ? v : ex));
         },
       },
@@ -120,11 +120,8 @@ export default function Rise({ ready }) {
       .fromTo(".rise .c-explore", { autoAlpha: 0 }, { autoAlpha: 1, duration: at(0.03) }, at(0.89))
       .fromTo(".rise .c-explore h2 .c", { yPercent: 110 }, { yPercent: 0, stagger: 0.002, duration: at(0.04), ease: "power3.out" }, at(0.89))
       .fromTo(".rise .rail", { autoAlpha: 0, x: 30 }, { autoAlpha: 1, x: 0, duration: at(0.04) }, at(0.91))
-      // fly into the lit lobby → the bronze lift doors of the next chapter
-      .to(".rise .c-explore, .rise .rail, .rise .leftshade", { autoAlpha: 0, duration: 0.015 }, 0.925)
-      .to(".rise .zoomwrap", { scale: 3.4, duration: 0.07, ease: "power2.in" }, 0.93)
-      .to(".rise .vignette", { opacity: 0, duration: 0.03 }, 0.93)
-      .fromTo(".rise .bronze", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.035, ease: "power1.in" }, 0.962);
+      // explorer UI eases away just before the dissolve into the next chapter
+      .to(".rise .c-explore, .rise .rail, .rise .leftshade", { autoAlpha: 0, duration: 0.02 }, 0.975);
   }, { scope: root });
 
   // intro choreography after the loader
@@ -163,7 +160,6 @@ export default function Rise({ ready }) {
       <div className="fill vignette" />
       <div className="fill leftshade" />
       <div id="residences" className="anchor" />
-      <div className="bronze"><span className="ind"><i>▲</i>Arriving · Lobby</span></div>
 
       <div className="c-hero">
         <div className="mark"><Chars text={"Parva"} /></div>

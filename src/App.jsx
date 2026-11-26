@@ -57,7 +57,6 @@ export default function App() {
       <main ref={main}>
         <Rise ready={ready} />
         <Arrival />
-        <Marquee words={["Considered", "Crafted", "Celebrated", "Eleven floors", "One rooftop", "Dubai"]} tone="light" />
         <StepInside />
         <Kitchen />
         <Tour />
@@ -65,7 +64,6 @@ export default function App() {
         <Above />
         <Day />
         <Generation />
-        <Marquee words={["Live in celebration", "Parva Residences", "Private viewings now open"]} tone="gold" />
         <Reach />
         <Finale />
         <Contact />
